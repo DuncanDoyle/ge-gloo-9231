@@ -1,0 +1,37 @@
+apiVersion: enterprise.gloo.solo.io/v1
+kind: AuthConfig
+metadata:
+  name: oauth-acf-auth
+  namespace: gloo-system
+spec:
+  configs:
+    - oauth2:
+        oidcAuthorizationCode:
+          issuerUrl: http://keycloak.example.com/realms/master/
+          appUrl: http://api.example.com
+          callbackPath: /callback
+          clientId: webapp-client
+          clientSecretRef:
+            name: oauth
+            namespace: gloo-system
+          session:
+            # cookie:
+            #   allowRefreshing: true
+            # Needed since we run on http instead of https in this demo. Without this, we'll end up in a redirect loop as no cookies are set on the client ...
+            cookieOptions:
+              notSecure: true
+              # Expire the session cookie after a minute, forcing a re-login
+              maxAge: 30
+            # Store the id_token and access_token in Redis, and only sent session ID back to the client.
+            failOnFetchFailure: true
+            redis:
+              cookieName: keycloak-session
+              options:
+                host: redis.gloo-system.svc.cluster.local:6379
+          scopes:
+            - email
+          # Restore the JWT in the header we're sending to Upstream.
+          # This allows us to send the identity-token JWT in a header to Upstream, without needing to set the headers on the client (i.e. we only store the session-id on the client).
+          headers:
+            idTokenHeader: jwt-id
+            accessTokenHeader: jwt-access

@@ -1,0 +1,22 @@
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: keycloak-vs
+  namespace: gloo-system
+  labels:
+    app: keycloak
+spec:
+  virtualHost:
+    domains:
+    - 'keycloak.example.com'
+    routes:
+    - matchers:
+      - prefix: /
+      routeAction:
+        single:
+          upstream:
+            name: keycloak-keycloak-80
+            namespace: gloo-system
+      # options:
+      #   prefixRewrite: /
+ 

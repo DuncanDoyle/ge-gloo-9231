@@ -1,0 +1,36 @@
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: vs
+  namespace: gloo-system
+  labels:
+    app: httpbin
+spec:
+  virtualHost:
+    domains:
+    - 'api.example.com'
+    routes:
+    - matchers:
+      - prefix: /callback
+      options:
+        prefixRewrite: '/login'
+      routeAction:
+        single:
+          upstream:
+            name: default-httpbin-8000
+            namespace: gloo-system
+    - matchers:
+      - prefix: /
+      routeAction:
+        single:
+          upstream:
+            name: default-httpbin-8000
+            namespace: gloo-system 
+      # options:
+      #   prefixRewrite: /
+    options:
+      extauth:
+        configRef:
+          name: oauth-acf-auth
+          # name: keycloak-oidc
+          namespace: gloo-system
